@@ -21,7 +21,6 @@ class PolicyGradient(nn.Module):
 
         hidden_layer_size = 256
 
-        # actor
         self.actor = nn.Sequential(
             nn.Linear(state_size, hidden_layer_size),
             nn.ReLU(),
@@ -31,7 +30,6 @@ class PolicyGradient(nn.Module):
             # END STUDENT SOLUTION
         )
 
-        # critic
         self.critic = nn.Sequential(
             nn.Linear(state_size, hidden_layer_size),
             nn.ReLU(),
@@ -40,7 +38,6 @@ class PolicyGradient(nn.Module):
             # END STUDENT SOLUTION
         )
 
-        # initialize networks, optimizers, move networks to device
         # BEGIN STUDENT SOLUTION
         self.optimizer_actor = optim.Adam(self.actor.parameters(), lr=lr_actor)
         self.optimizer_critic = optim.Adam(self.critic.parameters(), lr=lr_critic)
@@ -104,13 +101,11 @@ class PolicyGradient(nn.Module):
         return returns
 
     def train(self, states, actions, rewards):
-        # train the agent using states, actions, and rewards
         # BEGIN STUDENT SOLUTION
         states_tensor = torch.FloatTensor(states).to(self.device)
         actions_tensor = torch.LongTensor(actions).to(self.device)
         rewards_tensor = torch.FloatTensor(rewards).to(self.device)
 
-        # Compute returns G_t
         if self.mode == 'REINFORCE':
             returns = self.calculate_n_step_bootstrap(rewards_tensor)
         elif self.mode == 'BASELINE':
@@ -128,7 +123,6 @@ class PolicyGradient(nn.Module):
         action_distribution = torch.distributions.Categorical(action_probs)
         log_probs = action_distribution.log_prob(actions_tensor)
 
-        # Compute policy loss
         policy_loss = - (log_probs * returns.detach()).mean()
 
         if self.mode != 'REINFORCE':
@@ -137,7 +131,6 @@ class PolicyGradient(nn.Module):
             actor_loss.backward()
             self.optimizer_critic.step()
 
-        # Update actor network
         self.optimizer_actor.zero_grad()
         policy_loss.backward()
         self.optimizer_actor.step()
